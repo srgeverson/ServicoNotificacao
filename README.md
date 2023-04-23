@@ -19,7 +19,7 @@ Além disto é bom ter um editor para trabalhar com o código como [Spring Tools
 ## 🛠️ Configurando o ambiente
 
 ```bash
-# 
+# Abra o repositório clonado e aguarde o download das dependências.
 $ 
 
 ```
@@ -55,6 +55,14 @@ $ mysqldump -u root -p system > {PASTA_DE_DESTINO_DO_BACACKUP}/backup_db_system.
 $ mysql -u root -p system < {PASTA_ONDE_O_PROJETO_FOI_CLONADO}/system/sql/system.sql
 
 ```
+
+## 📃 Documentos Referênciados
+
+* **Diagrama de Entidade Relacionamento - MER**
+
+<p align="center">
+    <img src="./MER.png"/>
+</p>
 
 ## 👨‍💻 Equipe de Desenvolvimento
 
