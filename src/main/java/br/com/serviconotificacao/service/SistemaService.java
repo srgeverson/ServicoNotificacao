@@ -13,6 +13,10 @@ public class SistemaService {
 	private SistemaRepository sistemaRepository;
 
 	public SistemaModel consultarSistema(String nome) {
-		return sistemaRepository.findByNome(nome).get();
+		return sistemaRepository.findByNome(nome);
+	}
+	
+	public SistemaModel cadastrarSistema(SistemaModel sistema) {
+		return sistemaRepository.save(sistema);
 	}
 }

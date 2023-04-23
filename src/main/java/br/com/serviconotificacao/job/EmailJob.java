@@ -3,31 +3,28 @@ package br.com.serviconotificacao.job;
 import java.time.LocalTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import br.com.serviconotificacao.model.SistemaModel;
 import br.com.serviconotificacao.service.LogService;
-import br.com.serviconotificacao.service.SistemaService;
+import br.com.serviconotificacao.util.ConsoleUtil;
 
 @Component
 public class EmailJob {
 
 	@Autowired
-	private SistemaService sistemaService;
+	@Qualifier("sistema")
+	private SistemaModel sistema;
 
 	@Autowired
 	private LogService logService;
-	
+
 	@Scheduled(fixedDelay = 5000)
-	public void execute() throws InterruptedException{
+	public void execute() throws InterruptedException {
 
-		System.out.println("<---------------------------------------------------------------------------->");
-		var sistema = sistemaService.consultarSistema("ServicoNotificacao");
-		System.out.println(String.format("Enviando E-mail -> %s, sistema -> %s, logs registrados -> %d", 
-				LocalTime.now().toString(),
-				sistema.getNome(),
-				logService.consultarLogs().size()));
-
-		System.out.println("<---------------------------------------------------------------------------->");
+		ConsoleUtil.mensagem("E-mail", String.format("Enviando E-mail -> %s, sistema -> %s, logs registrados -> %d",
+				LocalTime.now().toString(), sistema.getNome(), logService.consultarLogs().size()));
 	}
 }
