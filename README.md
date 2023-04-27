@@ -34,6 +34,17 @@ $ git clone https://github.com/srgeverson/ServicoNotificacao.git
 # Abra a pasta clonada com o Spring Tool Suite
 $ cd ServicoNotificacao/
 
+# Gerando executável da aplicação
+$ mvnw clean package
+$ clean package -Pdocker
+# Botão direito em cima do projeto, maven->build... em gols atribuir claen package em seguida executar
+
+# Criando imagem docker
+$ docker image build -t servico .
+
+# Executar a imagem
+$ docker container run --rm servico
+
 ```
 
 ## 📃 Backup/Restore de dados
