@@ -1,5 +1,4 @@
-FROM openjdk:11-jre-slim
-
+FROM openjdk:17
 WORKDIR /app
 
 ARG JAR_FILE

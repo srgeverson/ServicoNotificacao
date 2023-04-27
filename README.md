@@ -42,9 +42,17 @@ $ clean package -Pdocker
 # Criando imagem docker
 $ docker image build -t servico .
 
-# Executar a imagem
+# Limpando imagens que não são utilizadas
+$ docker image prune
+
+# Executar container
 $ docker container run --rm servico
 
+# Executando container com rede e host específico e 
+$ docker container run --rm -e DB_HOST=paulistense_db --network syssite_paulistense_network_public servico
+
+# Executar imagens no docker compose
+$ docker-compose up -d
 ```
 
 ## 📃 Backup/Restore de dados
