@@ -20,12 +20,11 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=$BANCO_SENHA
 
-  servico-notificacao:
-    image: servico
+  servico_notificacao:
+    image: servico_notificacao:0.0.1-SNAPSHOT
+    command: ["./wait-for-it.sh", "paulistense_db:3306", "-t", "30", "--", "java", "-jar", "servico.jar"]
     environment:
       DB_HOST: paulistense_db
-    ports:
-      - "8080:8080"
     networks:
       - paulistense_network_private
     depends_on:

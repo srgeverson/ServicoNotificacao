@@ -36,8 +36,9 @@ $ cd ServicoNotificacao/
 
 # Gerando executável da aplicação
 $ mvnw clean package
-$ clean package -Pdocker
+
 # Botão direito em cima do projeto, maven->build... em gols atribuir claen package em seguida executar
+$ clean package -Pdocker
 
 # Criando imagem docker
 $ docker image build -t servico .
@@ -51,8 +52,12 @@ $ docker container run --rm servico
 # Executando container com rede e host específico e 
 $ docker container run --rm -e DB_HOST=paulistense_db --network syssite_paulistense_network_public servico
 
-# Executar imagens no docker compose
-$ docker-compose up -d
+# Executar container no docker compose
+$ docker-compose up -d --scale servico_notificacao=2
+
+# Parar container no docker compose
+$ docker-compose down --volumes
+
 ```
 
 ## 📃 Backup/Restore de dados
