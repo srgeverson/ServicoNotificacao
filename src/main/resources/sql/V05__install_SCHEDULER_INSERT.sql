@@ -1,7 +1,30 @@
 
 INSERT INTO SCHEDULERS (
-  ID, NOME, CRON_EXPR, ATIVO, LOCK_AT_MOST_FOR, LOCK_AT_LEAST_FOR, SISTEMA_ID
+  ID, 
+  NOME, 
+  CRON_EXPRESSION, 
+  ATIVO, 
+  DESCRICAO, 
+  ULTIMA_EXECUCAO, 
+  PROXIMA_EXECUCAO, 
+  CRIADO_EM, 
+  ATUALIZADO_EM, 
+  LOCK_AT_MOST_FOR, 
+  LOCK_AT_LEAST_FOR, 
+  SISTEMA_ID
 ) VALUES (
-  3, 'SCHEDULER_NOTIFICACAO', '0 * * * * ?', 'S', '5m', '10s', 1
+  3,
+  'SCHEDULER_NOTIFICACAO',
+  '0 * * * * ?',
+  'S',
+  'Tarefa de notificação de usuários ativos',
+  NULL,
+  NULL,
+  SYSTIMESTAMP,
+  SYSTIMESTAMP,
+  '5M',
+  '10S',
+  1
 );
+
 COMMIT;
