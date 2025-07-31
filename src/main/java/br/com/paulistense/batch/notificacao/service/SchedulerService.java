@@ -56,24 +56,51 @@ public class SchedulerService {
 	}
 
 	public void executarTarefa(Scheduler tarefa) {
-		LockConfiguration config = new LockConfiguration(
-				Instant.now(),
-				tarefa.getNome(), // nome da tarefa como chave
-				// do lock
-				Duration.parse("PT".concat(tarefa.getLockAtMostFor().toUpperCase())),
-				Duration.parse("PT".concat(tarefa.getLockAtLeastFor().toUpperCase())));
+    Duration lockAtMostFor = Duration.parse("PT" + tarefa.getLockAtMostFor().toUpperCase());
+    Duration lockAtLeastFor = Duration.parse("PT" + tarefa.getLockAtLeastFor().toUpperCase());
 
-		SimpleLock lock = lockProvider.lock(config).orElse(null);
+    LockConfiguration config = new LockConfiguration(
+        Instant.now(),
+        tarefa.getNome(),
+        lockAtMostFor,
+        lockAtLeastFor
+    );
 
-		if (lock == null) {
-			log.info("Lock em uso para tarefa: ".concat(tarefa.getNome()));
-		} else {
-			try {
-				log.info("Executando tarefa: ".concat(tarefa.getNome()));
-			} finally {
-				lock.unlock();
-				log.warn("// Libera o lock manualmente");
-			}
-		}
+    SimpleLock lock = lockProvider.lock(config).orElse(null);
+
+    if (lock == null) {
+        log.info("Lock em uso para a tarefa: {}", tarefa.getNome());
+        return;
+    }
+
+    long inicio = System.currentTimeMillis();
+
+    try {
+        log.info("Executando tarefa: {}", tarefa.getNome());
+
+        // Simula lógica de tarefa
+        executarLogicaTarefa(tarefa);
+
+        // Garante que a execução dure ao menos o lockAtLeastFor
+        long duracaoAtual = System.currentTimeMillis() - inicio;
+        long minimoMillis = lockAtLeastFor.toMillis();
+
+        if (duracaoAtual < minimoMillis) {
+            long esperar = minimoMillis - duracaoAtual;
+            log.info("Aguardando {}ms para cumprir lockAtLeastFor", esperar);
+            Thread.sleep(esperar);
+        }
+
+    } catch (Exception e) {
+        log.error("Erro na tarefa {}: {}", tarefa.getNome(), e.getMessage(), e);
+    } finally {
+        lock.unlock();
+        log.info("Lock liberado para a tarefa: {}", tarefa.getNome());
+    }
+}
+
+	private void executarLogicaTarefa(Scheduler tarefa) {
+		log.info(null == tarefa.getNome() ? "Executando tarefa sem descrição"
+				: "Executando tarefa: ".concat(tarefa.getNome()));
 	}
 }
