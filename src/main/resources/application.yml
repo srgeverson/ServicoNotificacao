@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    url: "jdbc:oracle:thin:@${DB_HOST:localhost}:${DB_PORT:1521}/${DB_NAME:XEPDB1}"
+    username: "${DB_USERNAME:user_teste}"
+    password: "${DB_PASSWORD:12345678}"
+    driverClassName: "oracle.jdbc.OracleDriver"
+  jpa:
+    show-sql: ${SHOW_SQL:true}
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+      fail-on-ignored-properties: true
+  # Configurações do Flyway
+  flyway:
+    url: "jdbc:oracle:thin:@${DB_HOST:localhost}:${DB_PORT:1521}/${DB_NAME:XEPDB1}"
+    user: "${DB_USERNAME:user_teste}"
+    password: "${DB_PASSWORD:12345678}"
+    locations: "classpath:sql"
+server:
+  port: "${SERVER_PORT:8088}"
+springdoc:
+  packages-to-scan: br.com.paulistense.batch.notificacao.controller
+  paths-to-match: /v1/**
+br:
+  com:
+    paulistense:
+      batch:
+        notificacao:
+          url: "${APPLICATION_URL:http://localhost}"
+          nome: "@project.name@"
+          versao: "@project.version@"

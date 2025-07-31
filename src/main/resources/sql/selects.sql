@@ -1,0 +1,42 @@
+--drop table SISTEMAS
+--drop sequence SEQ_SCHEDULERS
+drop TRIGGER TRG_SCHEDULERS_ID
+select * 
+from USER_TESTE.SCHEDULERS;
+
+
+SELECT OWNER, TABLE_NAME 
+FROM ALL_TABLES 
+WHERE TABLE_NAME = 'SCHEDULERS';
+
+SELECT --OWNER, OBJECT_NAME, OBJECT_TYPE ,
+'DROP '|| '' || OBJECT_TYPE || ' ' || (case when OBJECT_NAME like '%flyway%' then '"'||OBJECT_NAME||'"' else OBJECT_NAME end) || ';' desfazer
+FROM ALL_OBJECTS 
+WHERE OWNER = 'USER_TESTE' --AND OBJECT_NAME LIKE '%UQ%'
+order by OBJECT_NAME
+;
+
+select * 
+-- delete
+from "flyway_schema_history"
+where
+"installed_rank" = 4
+;
+commit;
+                  
+DROP TRIGGER SCHEDULERS_TRG_ID;
+DROP SEQUENCE SCHEDULERS_SEQ;
+DROP TABLE SCHEDULERS;     
+
+DROP TRIGGER SISTEMAS_ID_TRG;
+DROP SEQUENCE SISTEMAS_SEQ;
+DROP TABLE SISTEMAS;       
+
+DROP TRIGGER USUARIOS_TRG_ID;
+DROP SEQUENCE USUARIOS_SEQ;
+DROP TABLE USUARIOS;       
+
+DROP INDEX "flyway_schema_history_s_idx";
+DROP TABLE "flyway_schema_history";
+
+
