@@ -15,6 +15,11 @@ public class SistemaService {
 
 	public Sistema buscarSistemaPorTitulo(String nome) {
 		return repository.findByNome(nome)
-				.orElseThrow(() -> new EntidadeNaoEncontradaException(Sistema.class.getName()));
+				.orElseThrow(() -> new EntidadeNaoEncontradaException(Sistema.class, nome));
+	}
+
+	public Sistema buscarSistemaPorId(Long id) {
+		return repository.findById(id)
+				.orElseThrow(() -> new EntidadeNaoEncontradaException(Sistema.class, id));
 	}
 }

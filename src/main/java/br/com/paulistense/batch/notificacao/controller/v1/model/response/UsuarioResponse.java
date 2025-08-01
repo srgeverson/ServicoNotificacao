@@ -5,9 +5,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SistemaResponse {
-	private Integer id;
-	private String descricao;
+public class UsuarioResponse {
+    private Integer id;
 	private String nome;
 	private String ativo;
 }

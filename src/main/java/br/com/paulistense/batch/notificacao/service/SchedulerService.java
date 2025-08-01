@@ -70,15 +70,24 @@ public class SchedulerService {
         ScheduledFuture<?> future = taskScheduler.schedule(job, trigger);
         tarefasAgendadas.put(tarefa.getNome(), future);
 
-        log.info("// Calcular próxima execução (opcional, pois TriggerContext não é persistente)");
+        log.info("// Calcular próxima execução com base nos tempos de lock");
         try {
-            SimpleTriggerContext triggerContext = new SimpleTriggerContext();
-            Date nextExecution = trigger.nextExecutionTime(triggerContext);
-            if (nextExecution != null) {
-                tarefa.setProximaExecucao(nextExecution.toInstant()
-                        .atZone(ZoneId.systemDefault()).toLocalDateTime());
-                repository.save(tarefa);
-            }
+            // Usa a última execução como referência ou Instant.now() se for a primeira
+            Instant ultimaExecucao = tarefa.getUltimaExecucao() != null
+                    ? tarefa.getUltimaExecucao().atZone(ZoneId.systemDefault()).toInstant()
+                    : Instant.now();
+
+            Duration lockAtMost = parseDuration(tarefa.getLockAtMostFor());
+            Duration lockAtLeast = parseDuration(tarefa.getLockAtLeastFor());
+
+            Duration intervalo = lockAtMost.compareTo(lockAtLeast) > 0 ? lockAtMost : lockAtLeast;
+            Instant proximaExecucao = ultimaExecucao.plus(intervalo);
+
+            tarefa.setProximaExecucao(proximaExecucao
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime());
+
+            repository.save(tarefa);
         } catch (Exception e) {
             log.warn("Erro ao calcular próxima execução para tarefa: {}", tarefa.getNome(), e);
         }
@@ -87,15 +96,14 @@ public class SchedulerService {
     }
 
     public void executarTarefa(Scheduler tarefa) {
-        Duration lockAtMostFor = Duration.parse("PT" + tarefa.getLockAtMostFor().toUpperCase());
-        Duration lockAtLeastFor = Duration.parse("PT" + tarefa.getLockAtLeastFor().toUpperCase());
+        Duration lockAtMostFor = Duration.parse("PT".concat(tarefa.getLockAtMostFor().toUpperCase()));
+        Duration lockAtLeastFor = Duration.parse("PT".concat(tarefa.getLockAtLeastFor().toUpperCase()));
 
         LockConfiguration config = new LockConfiguration(
-            Instant.now(),
-            tarefa.getNome(),
-            lockAtMostFor,
-            lockAtLeastFor
-        );
+                Instant.now(),
+                tarefa.getNome(),
+                lockAtMostFor,
+                lockAtLeastFor);
 
         SimpleLock lock = lockProvider.lock(config).orElse(null);
 
@@ -109,13 +117,35 @@ public class SchedulerService {
         try {
             log.info("Executando tarefa: {}", tarefa.getNome());
 
-            log.info("// Atualiza data de execução");
-            tarefa.setUltimaExecucao(LocalDateTime.now());
+            // Atualiza data de execução
+            LocalDateTime agora = LocalDateTime.now();
+            tarefa.setUltimaExecucao(agora);
+
+            // Calcula a próxima execução com base no cron e tempo atual
+            CronTrigger trigger = new CronTrigger(tarefa.getCronExpression());
+            SimpleTriggerContext triggerContext = new SimpleTriggerContext();
+            triggerContext.update(Date.from(agora.atZone(ZoneId.systemDefault()).toInstant()), null, null);
+            Date next = trigger.nextExecutionTime(triggerContext);
+
+            if (next != null) {
+                LocalDateTime proximaExecucao = next.toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDateTime();
+
+                // Garante que respeite o mínimo definido por lockAtLeastFor
+                LocalDateTime bloqueioMinimo = agora.plus(lockAtLeastFor);
+                if (proximaExecucao.isBefore(bloqueioMinimo)) {
+                    proximaExecucao = bloqueioMinimo;
+                }
+
+                tarefa.setProximaExecucao(proximaExecucao);
+            }
+
             repository.save(tarefa);
 
             executarLogicaTarefa(tarefa);
 
-            log.info("// Garantir execução mínima");
+            // Garantir execução mínima
             long duracaoAtual = System.currentTimeMillis() - inicio;
             long minimoMillis = lockAtLeastFor.toMillis();
 
@@ -139,6 +169,21 @@ public class SchedulerService {
         }
     }
 
+    private Duration parseDuration(String value) {
+        if (value == null || value.isBlank()) {
+            return Duration.ZERO;
+        }
+
+        value = value.trim().toLowerCase();
+        if (value.endsWith("m")) {
+            return Duration.ofMinutes(Long.parseLong(value.replace("m", "")));
+        } else if (value.endsWith("s")) {
+            return Duration.ofSeconds(Long.parseLong(value.replace("s", "")));
+        } else {
+            throw new IllegalArgumentException("Formato de duração inválido: " + value);
+        }
+    }
+
     // Métodos públicos para atualização via Controller
     public void atualizarCron(String nome, String novaExpressao) {
         Scheduler tarefa = repository.findByNomeAndSistemaId(nome, sistemaDTO.getId())
@@ -159,8 +204,10 @@ public class SchedulerService {
         }
         repository.save(tarefa);
 
-        if (ativar) recarregarTarefa(nome);
-        else cancelarTarefa(nome);
+        if (ativar)
+            recarregarTarefa(nome);
+        else
+            cancelarTarefa(nome);
     }
 
     private void recarregarTarefa(String nome) {
@@ -171,12 +218,13 @@ public class SchedulerService {
 
     private void cancelarTarefa(String nome) {
         ScheduledFuture<?> future = tarefasAgendadas.remove(nome);
-        if (future != null) future.cancel(false);
+        if (future != null)
+            future.cancel(false);
     }
 
-	public Optional<Scheduler> buscarPorNome(String name) {
-		return repository.findByNomeAndSistemaId(name, sistemaDTO.getId());
-	}
+    public Optional<Scheduler> buscarPorNome(String name) {
+        return repository.findByNomeAndSistemaId(name, sistemaDTO.getId());
+    }
 
     public Scheduler salvar(Scheduler config) {
         return repository.save(config);

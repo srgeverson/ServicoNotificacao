@@ -50,4 +50,7 @@ public class Scheduler {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "SISTEMA_ID", referencedColumnName = "ID")
 	private Sistema sistema;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "USUARIO_ID", referencedColumnName = "ID")
+	private Usuario usuario;
 }

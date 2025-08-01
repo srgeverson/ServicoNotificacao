@@ -15,7 +15,11 @@ FROM ALL_OBJECTS
 WHERE OWNER = 'USER_TESTE' --AND OBJECT_NAME LIKE '%UQ%'
 order by OBJECT_NAME
 ;
-
+select 
+s.ULTIMA_EXECUCAO,s.PROXIMA_EXECUCAO,s.NOME,s.CRON_EXPRESSION
+,s.*
+from USER_TESTE.SCHEDULERS s
+;
 select * 
 -- delete
 from "flyway_schema_history"
