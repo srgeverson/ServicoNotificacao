@@ -2,11 +2,9 @@ package br.com.paulistense.batch.notificacao.controller.v1.model.response;
 
 import java.time.LocalDateTime;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class SchedulerResponse {
     private Long id;
     private String nome;

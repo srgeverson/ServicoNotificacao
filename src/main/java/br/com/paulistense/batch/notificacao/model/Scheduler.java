@@ -2,6 +2,9 @@ package br.com.paulistense.batch.notificacao.model;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -43,8 +46,10 @@ public class Scheduler {
 	private LocalDateTime ultimaExecucao;
 	@Column(name = "PROXIMA_EXECUCAO")
 	private LocalDateTime proximaExecucao;
+	@CreationTimestamp
 	@Column(name = "CRIADO_EM", nullable = false, columnDefinition = "TIMESTAMP DEFAULT SYSTIMESTAMP")
 	private LocalDateTime criadoEm;
+	@UpdateTimestamp
 	@Column(name = "ATUALIZADO_EM", nullable = false, columnDefinition = "TIMESTAMP DEFAULT SYSTIMESTAMP")
 	private LocalDateTime atualizadoEm;
 	@ManyToOne(fetch = FetchType.LAZY)

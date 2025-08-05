@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,9 +19,10 @@ import br.com.paulistense.batch.notificacao.model.exception.NegocioException;
 import br.com.paulistense.batch.notificacao.service.SchedulerService;
 import br.com.paulistense.batch.notificacao.service.SistemaService;
 import br.com.paulistense.batch.notificacao.service.UsuarioService;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import jakarta.validation.Valid;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,10 +67,12 @@ public class SchedulerController {
     }
 
     @GetMapping("/{name}")
-    public ResponseEntity<Scheduler> getSchedule(@PathVariable String name) {
+    public ResponseEntity<SchedulerResponse> getSchedule(@PathVariable String name) {
         try {
-            var schedule = service.buscarPorNome(name).orElseThrow(() -> new EntidadeNaoEncontradaException(Scheduler.class, name));
-            return ResponseEntity.ok(schedule);
+            var schedule = service.buscarPorNome(name)
+                    .orElseThrow(() -> new EntidadeNaoEncontradaException(Scheduler.class, name));
+            var response = mapper.toResponse(schedule);
+            return ResponseEntity.ok(response);
         } catch (NegocioException ne) {
             problemDetail = ProblemDetail
                     .forStatusAndDetail(HttpStatusCode.valueOf(400), ne.getMessage());
@@ -84,19 +88,29 @@ public class SchedulerController {
         }
     }
 
-    @PostMapping
-    public ResponseEntity<SchedulerRequest> createSchedule(@RequestBody SchedulerRequest request) {
+    @PostMapping("/create")
+    public ResponseEntity<SchedulerResponse> createSchedule(@Valid @RequestBody SchedulerRequest request) {
         try {
-            if (service.buscarPorNome(request.getNome()).isPresent()) 
-                throw new EntidadeEmUsoException("Schedule with this name already exists");
+            if (service.buscarPorNome(request.getNome()).isPresent())
+                throw new EntidadeEmUsoException(Scheduler.class, request.getNome());
+
+            // Converte para entidade
             Scheduler model = mapper.toModel(request);
-            return ResponseEntity.ok(request);
-            // sistemaService.buscarSistemaPorId(model.getSistema().getId());
-            // usuarioService.buscarUsuarioPorId(model.getUsuario().getId());
-            // model = service.salvar(model);
-            // var response = mapper.toResponse(model);
-            // service.carregarTarefas();
-            // return ResponseEntity.ok(response);
+
+            // Valida entidades relacionadas (se quiser validar antes de salvar)
+            sistemaService.buscarSistemaPorId(model.getSistema().getId());
+            usuarioService.buscarUsuarioPorId(model.getUsuario().getId());
+            // Salva no banco
+            model = service.salvar(model);
+
+            // Mapeia de volta para resposta
+            SchedulerResponse response = mapper.toResponse(model);
+
+            // Recarrega tarefas agendadas (se necessário)
+            service.carregarTarefas();
+
+            return ResponseEntity.ok(response);
+
         } catch (NegocioException ne) {
             problemDetail = ProblemDetail
                     .forStatusAndDetail(HttpStatusCode.valueOf(400), ne.getMessage());
